@@ -131,7 +131,7 @@ async def amireallyalive(alive):
                      f"Codename: Orion \n"
                      f"Owner: {DEFAULTUSER} \n"
                      f"Location: IN \n"
-                     f"Userbot: Jimmy "B-Rabbit "
+                     f"Userbot: Jimmy B-Rabbit "
                      )
 
 
