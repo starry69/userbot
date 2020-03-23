@@ -26,7 +26,7 @@ echo "$1=y" >> $prog_f
 
 # Welcome Message
 welcome() {
-    echo "*****Welcome to mkaraniya's userbot setup*****
+    echo "*****Welcome to Starry's userbot setup*****
 This Guided Setup shall help you get your own userbot up and running.
 You might be asked for sudo password several number of times."
 }
@@ -48,7 +48,7 @@ botclone() {
     cd ~
     echo "Cloning bot sources..."
     if [ -z "$bot_clone" ]; then
-        git clone https://github.com/mkaraniya/OpenUserBot -b sql-extended
+        git clone https://github.com/starry69/OpenUserBot -b sql-extended
         save_prog "bot_clone"
     fi
     echo "DONE!!"
