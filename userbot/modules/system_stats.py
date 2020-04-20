@@ -135,7 +135,6 @@ async def amireallyalive(alive):
                      )
 
 
-
 @register(outgoing=True, pattern="^.aliveu")
 async def amireallyaliveuser(username):
     """ For .aliveu command, change the username in the .alive command. """
