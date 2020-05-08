@@ -1150,6 +1150,17 @@ async def typewriter(typew):
         await sleep(sleep_time)
 
 
+@register(outgoing=True, pattern="^.fleave$")
+async def fleave(e): 
+      """ Fake leave """ 
+      await e.edit("`Legend is leaving this chat.....!` @admin `Goodbye aren't forever..` ")
+
+
+@register(outgoing=True, pattern="^.lol$")
+async def lol(e): 
+      """ lol """ 
+      await e.edit("😂\n😂\n😂\n😂\n😂😂😂😂\n\n   😂😂😂\n 😂         😂\n😂           😂\n 😂         😂\n   😂😂😂\n\n😂\n😂\n😂\n😂\n😂😂😂😂")
+
 CMD_HELP.update({
     "memes":
     ".cowsay\
@@ -1164,6 +1175,10 @@ CMD_HELP.update({
 \nUsage: Copypasta the famous meme\
 \n\n.vapor\
 \nUsage: Vaporize everything!\
+\n\n.fleave\
+\nUsage: fake leave chat group.\
+\n\n.lol\
+\nUsage: lol in emoji 😂.\
 \n\n.str\
 \nUsage: Stretch it.\
 \n\n.10iq\
