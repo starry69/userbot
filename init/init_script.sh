@@ -48,7 +48,7 @@ botclone() {
     cd ~
     echo "Cloning bot sources..."
     if [ -z "$bot_clone" ]; then
-        git clone https://github.com/starry69/OpenUserBot -b sql-extended
+        git clone https://github.com/starry69/userbot -b master
         save_prog "bot_clone"
     fi
     echo "DONE!!"
