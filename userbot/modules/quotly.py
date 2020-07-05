@@ -1,14 +1,3 @@
-<<<<<<< HEAD
-#port to userbot by @MoveAngel
-
-import datetime
-from telethon import events
-from telethon.errors.rpcerrorlist import YouBlockedUserError
-from telethon.tl.functions.account import UpdateNotifySettingsRequest
-from userbot import bot, CMD_HELP
-from userbot.events import register
-
-=======
 # Copyright (C) 2019 The Raphielscape Company LLC.
 #
 # Licensed under the Raphielscape Public License, Version 1.d (the "License");
@@ -55,7 +44,7 @@ if 1 == 1:
                                                               "#62d4e3", "#65bdf3", "#ff5694"],
                                           "default_username_color": "#b48bf2"}
 
->>>>>>> foo/sql-extended
+
 @register(outgoing=True, pattern="^.q(?: |$)(.*)")
 async def _(event):
     if event.fwd_from:
@@ -86,14 +75,8 @@ async def _(event):
           else: 
              await event.delete()   
              await bot.forward_messages(event.chat_id, response.message)
-<<<<<<< HEAD
 
-CMD_HELP.update({
-        "quotly": 
-        ".q reply_message. \
-          \nUsage: Enhance ur text to sticker.\n"
-    })
-=======
+
 @register(outgoing=True, pattern="^.pch(?: |$)(.*)")
 async def quotecmd(message):  # noqa: C901
         """Quote a message.
@@ -269,5 +252,4 @@ CMD_HELP.update({
 \nUsage: Enhance ur text to sticker.\
 \n\n`.pch`\
 \nUsage: Same as quotly, enhance ur text to sticker."
-})    
->>>>>>> foo/sql-extended
+})
