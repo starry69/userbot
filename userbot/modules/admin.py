@@ -1,13 +1,22 @@
 # Copyright (C) 2019 The Raphielscape Company LLC.
 #
-# Licensed under the Raphielscape Public License, Version 1.c (the "License");
+# Licensed under the Raphielscape Public License, Version 1.d (the "License");
 # you may not use this file except in compliance with the License.
+ # thanks to anishsk 
 """
 Userbot module to help you manage a group
 """
 
 from asyncio import sleep
 from os import remove
+import asyncio
+import io
+import re
+import html
+import logging
+import userbot.modules.sql_helper.warns_sql as sql
+from telethon import events, utils
+from userbot.utils.tools import is_admin
 
 from telethon.errors import (BadRequestError, ChatAdminRequiredError,
                              ImageProcessFailedError, PhotoCropSizeSmallError,
@@ -24,6 +33,7 @@ from telethon.tl.types import (PeerChannel, ChannelParticipantsAdmins,
                                ChannelParticipantsBots)
 
 from userbot import BOTLOG, BOTLOG_CHATID, CMD_HELP, bot
+from telethon.tl import types, functions
 from userbot.events import register
 
 # =================== CONSTANT ===================
@@ -878,71 +888,339 @@ async def get_userdel_from_id(user, event):
 
     return user_obj
 
-@register(outgoing=True, pattern="^.bots$", groups_only=True)
-async def get_bots(show):
-    """ For .bots command, list all of the bots of the chat. """
-    info = await show.client.get_entity(show.chat_id)
-    title = info.title if info.title else "this chat"
-    mentions = f'<b>Bots in {title}:</b>\n'
-    try:
-       # if isinstance(message.to_id, PeerChat):
-        #    await show.edit("`I heard that only Supergroups can have bots.`")
-         #   return
-       # else:
-            async for user in show.client.iter_participants(
-                    show.chat_id, filter=ChannelParticipantsBots):
-                if not user.deleted:
-                    link = f"<a href=\"tg://user?id={user.id}\">{user.first_name}</a>"
-                    userid = f"<code>{user.id}</code>"
-                    mentions += f"\n{link} {userid}"
-                else:
-                    mentions += f"\nDeleted Bot <code>{user.id}</code>"
-    except ChatAdminRequiredError as err:
-        mentions += " " + str(err) + "\n"
-    try:
-        await show.edit(mentions, parse_mode="html")
-    except MessageTooLongError:
-        await show.edit(
-            "Damn, too many bots here. Uploading bots list as file.")
-        file = open("botlist.txt", "w+")
-        file.write(mentions)
-        file.close()
-        await show.client.send_file(
-            show.chat_id,
-            "botlist.txt",
-            caption='Bots in {}'.format(title),
-            reply_to=show.id,
-        )
-        remove("botlist.txt")
+@register(outgoing=True, pattern=r"^\.lock ?(.*)")
+async def locks(event):
+    input_str = event.pattern_match.group(1).lower()
+    peer_id = event.chat_id
+    msg = None
+    media = None
+    sticker = None
+    gif = None
+    gamee = None
+    ainline = None
+    gpoll = None
+    adduser = None
+    cpin = None
+    changeinfo = None
+    if input_str == "msg":
+        msg = True
+        what = "messages"
+    elif input_str == "media":
+        media = True
+        what = "media"
+    elif input_str == "sticker":
+        sticker = True
+        what = "stickers"
+    elif input_str == "gif":
+        gif = True
+        what = "GIFs"
+    elif input_str == "game":
+        gamee = True
+        what = "games"
+    elif input_str == "inline":
+        ainline = True
+        what = "inline bots"
+    elif input_str == "poll":
+        gpoll = True
+        what = "polls"
+    elif input_str == "invite":
+        adduser = True
+        what = "invites"
+    elif input_str == "pin":
+        cpin = True
+        what = "pins"
+    elif input_str == "info":
+        changeinfo = True
+        what = "chat info"
+    elif input_str == "all":
+        msg = True
+        media = True
+        sticker = True
+        gif = True
+        gamee = True
+        ainline = True
+        gpoll = True
+        adduser = True
+        cpin = True
+        changeinfo = True
+        what = "everything"
+    else:
+        if not input_str:
+            await event.edit("`I can't lock nothing !!`")
+            return
+        else:
+            await event.edit(f"`Invalid lock type:` {input_str}")
+            return
 
-  
+    lock_rights = ChatBannedRights(
+        until_date=None,
+        send_messages=msg,
+        send_media=media,
+        send_stickers=sticker,
+        send_gifs=gif,
+        send_games=gamee,
+        send_inline=ainline,
+        send_polls=gpoll,
+        invite_users=adduser,
+        pin_messages=cpin,
+        change_info=changeinfo,
+    )
+    try:
+        await event.client(
+            EditChatDefaultBannedRightsRequest(peer=peer_id,
+                                               banned_rights=lock_rights))
+        await event.edit(f"`Locked {what} for this chat !!`")
+    except BaseException as e:
+        await event.edit(
+            f"`Do I have proper rights for that ??`\n**Error:** {str(e)}")
+        return
+
+
+@register(outgoing=True, pattern=r"^.unlock ?(.*)")
+async def rem_locks(event):
+    input_str = event.pattern_match.group(1).lower()
+    peer_id = event.chat_id
+    msg = None
+    media = None
+    sticker = None
+    gif = None
+    gamee = None
+    ainline = None
+    gpoll = None
+    adduser = None
+    cpin = None
+    changeinfo = None
+    if input_str == "msg":
+        msg = False
+        what = "messages"
+    elif input_str == "media":
+        media = False
+        what = "media"
+    elif input_str == "sticker":
+        sticker = False
+        what = "stickers"
+    elif input_str == "gif":
+        gif = False
+        what = "GIFs"
+    elif input_str == "game":
+        gamee = False
+        what = "games"
+    elif input_str == "inline":
+        ainline = False
+        what = "inline bots"
+    elif input_str == "poll":
+        gpoll = False
+        what = "polls"
+    elif input_str == "invite":
+        adduser = False
+        what = "invites"
+    elif input_str == "pin":
+        cpin = False
+        what = "pins"
+    elif input_str == "info":
+        changeinfo = False
+        what = "chat info"
+    elif input_str == "all":
+        msg = False
+        media = False
+        sticker = False
+        gif = False
+        gamee = False
+        ainline = False
+        gpoll = False
+        adduser = False
+        cpin = False
+        changeinfo = False
+        what = "everything"
+    else:
+        if not input_str:
+            await event.edit("`I can't unlock nothing !!`")
+            return
+        else:
+            await event.edit(f"`Invalid unlock type:` {input_str}")
+            return
+
+    unlock_rights = ChatBannedRights(
+        until_date=None,
+        send_messages=msg,
+        send_media=media,
+        send_stickers=sticker,
+        send_gifs=gif,
+        send_games=gamee,
+        send_inline=ainline,
+        send_polls=gpoll,
+        invite_users=adduser,
+        pin_messages=cpin,
+        change_info=changeinfo,
+    )
+    try:
+        await event.client(
+            EditChatDefaultBannedRightsRequest(peer=peer_id,
+                                               banned_rights=unlock_rights))
+        await event.edit(f"`Unlocked {what} for this chat !!`")
+    except BaseException as e:
+        await event.edit(
+            f"`Do I have proper rights for that ??`\n**Error:** {str(e)}")
+        return
+#imported from uniborg by @heyworld
+@register(outgoing=True, pattern="^.warn(?: |$)(.*)")
+async def _(event):
+    if event.fwd_from:
+        return
+    chat = await event.get_chat()
+    admin = chat.admin_rights
+    creator = chat.creator
+    warn_reason = event.pattern_match.group(1)
+    reply_message = await event.get_reply_message()
+    
+    if not admin and not creator:
+        await event.edit("`Bruh I Am Not Admin Here`")
+        return
+    
+    if await is_admin(event.chat_id, reply_message.from_id):
+        return await event.edit("`User is an admin`")
+
+    limit, soft_warn = sql.get_warn_setting(event.chat_id)
+    num_warns, reasons = sql.warn_user(reply_message.from_id, event.chat_id, warn_reason)
+    if num_warns >= limit:
+        await event.client.edit_permissions(chat, reply_message.from_id, until_date=None, view_messages=False)
+        if soft_warn:
+            reply = "{} warnings, <u><a href='tg://user?id={}'>user</a></u> has been kicked!".format(limit, reply_message.from_id)
+            await event.client.kick_participant(event.chat_id, reply_message.from_id)
+        else:
+            await event.client.edit_permissions(chat, reply_message.from_id, until_date=None, view_messages=False)
+            reply = "{} warnings, <u><a href='tg://user?id={}'>user</a></u> has been banned!".format(limit, reply_message.from_id)
+    else:
+        reply = "<u><a href='tg://user?id={}'>user</a></u> has {}/{} warnings... watch out!".format(reply_message.from_id, num_warns, limit)
+        if warn_reason:
+            reply += "\nReason for last warn:\n{}".format(html.escape(warn_reason))
+    #
+    await event.edit(reply, parse_mode="html")
+
+@register(outgoing=True, pattern="^.getwarns(?: |$)(.*)")
+async def _(event):
+    if event.fwd_from:
+        return
+    reply_message = await event.get_reply_message()
+    result = sql.get_warns(reply_message.from_id, event.chat_id)
+    if result and result[0] != 0:
+        num_warns, reasons = result
+        limit, soft_warn = sql.get_warn_setting(event.chat_id)
+        if reasons:
+            text = "This user has {}/{} warnings, for the following reasons:".format(num_warns, limit)
+            text += "\r\n"
+            text += reasons
+            await event.edit(text)
+        else:
+            await event.edit("This user has {} / {} warning, but no reasons for any of them.".format(num_warns, limit))
+    else:
+        await event.edit("This user hasn't got any warnings!")
+
+@register(outgoing=True, pattern="^.strongwarn(?: |$)(.*)")
+async def set_warn_strength(event):
+    chat = await event.get_chat()
+    admin = chat.admin_rights
+    creator = chat.creator
+    args = event.pattern_match.group(1)
+
+    if not admin and not creator:
+        await event.edit("`Bruh I Am Not Admin Here`")
+        return
+
+    if args:
+        if args in ("on", "yes"):
+            sql.set_warn_strength(event.chat_id, False)
+            await event.edit("Warn Strength Set To Ban User.")
+            return
+
+        elif args in ("off", "no"):
+            sql.set_warn_strength(event.chat_id, True)
+            await event.edit("Warn Strength Set To Kick User.")
+            return
+       
+        else:
+            await event.edit("`Please send Correct Arg!`")
+    else:
+        limit, soft_warn = sql.get_warn_setting(event.chat_id)
+        if soft_warn:
+            await event.edit("I Am **kicking** User's For Now.")
+        else:
+            await event.edit("I Am **Baning** User's For Now.")
+    return ""
+
+@register(outgoing=True, pattern="^.setwarn(?: |$)(.*)")
+async def set_warn_limit(event):
+    chat = await event.get_chat()
+    admin = chat.admin_rights
+    creator = chat.creator
+    input_str = event.pattern_match.group(1)
+
+    if not admin and not creator:
+        await event.edit("`Bruh I Am Not Admin Here`")
+        return
+    
+    if input_str:
+        if int(input_str) < 3:
+            await event.edit("`The minimum warn limit is 3!`")
+        else:
+            sql.set_warn_limit(event.chat_id, int(input_str))
+            await event.edit("`Updated the warn limit to` {}".format(input_str))
+            return
+        
+    else:
+        limit, soft_warn = sql.get_warn_setting(event.chat_id)
+        await event.edit("`The current warn limit is {}`".format(limit))
+    return ""        
+
+
+@register(outgoing=True, pattern="^.resetwarns(?: |$)(.*)")
+async def _(event):
+    if event.fwd_from:
+        return
+    reply_message = await event.get_reply_message()
+    sql.reset_warns(reply_message.from_id, event.chat_id)
+    await event.edit("Warnings have been reset!") 
+
+
 
 CMD_HELP.update({
     "admin":
-    ".promote <username/reply> <custom rank (optional)>\
+    "`.promote` <username/reply> <custom rank (optional)>\
 \nUsage: Provides admin rights to the person in the chat.\
-\n\n.demote <username/reply>\
+\n\n`.demote` <username/reply>\
 \nUsage: Revokes the person's admin permissions in the chat.\
-\n\n.ban <username/reply> <reason (optional)>\
+\n\n`.ban` <username/reply> <reason (optional)>\
 \nUsage: Bans the person off your chat.\
-\n\n.unban <username/reply>\
+\n\n`.unban` <username/reply>\
 \nUsage: Removes the ban from the person in the chat.\
-\n\n.mute <username/reply> <reason (optional)>\
+\n\n`.mute` <username/reply> <reason (optional)>\
 \nUsage: Mutes the person in the chat, works on admins too.\
-\n\n.unmute <username/reply>\
+\n\n`.unmute` <username/reply>\
 \nUsage: Removes the person from the muted list.\
-\n\n.gmute <username/reply> <reason (optional)>\
+\n\n`.gmute` <username/reply> <reason (optional)>\
 \nUsage: Mutes the person in all groups you have in common with them.\
-\n\n.ungmute <username/reply>\
+\n\n`.ungmute` <username/reply>\
 \nUsage: Reply someone's message with .ungmute to remove them from the gmuted list.\
-\n\n.zombies\
+\n\n`.zombies`\
 \nUsage: Searches for deleted accounts in a group. Use .zombies clean to remove deleted accounts from the group.\
-\n\n.admins\
+\n\n`.admins`\
 \nUsage: Retrieves a list of admins in the chat.\
-\n\n.bots\
-\nUsage: Retrieves a list of bots in the chat.\
-\n\n.users or .users <name of member>\
+\n\n`.kick`\
+\nUsage: kick users from groups.\
+\n\n`.users` or `.users` <name of member>\
 \nUsage: Retrieves all (or queried) users in the chat.\
-\n\n.setgppic <reply to image>\
-\nUsage: Changes the group's display picture."
+\n\n`.setgpic` <reply to image>\
+\nUsage: Changes the group's display picture.\
+\n\n`.warn reason`\
+\nUsage: warns users.\
+\n\n`.resetwarns`\
+\nUsage: Reset user's warns.\
+\n\n`.getwarns`\
+\nUsage: Shows the reason of warning.\
+\n\n`.setflood` value.\
+\nUsage:Sets flood limit in the current chat.\
+\n\n`.strongwarn` <yes/on or no/off>.\
+\nUsage:sets warn mode i.e <strong warn:bans user, soft warn: kicks user>.\
+\n\n`.setwarn` value.\
+\nUsage:sets warn limit."
 })

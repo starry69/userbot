@@ -1,6 +1,6 @@
 # Copyright (C) 2019 The Raphielscape Company LLC.
 #
-# Licensed under the Raphielscape Public License, Version 1.c (the "License");
+# Licensed under the Raphielscape Public License, Version 1.d (the "License");
 # you may not use this file except in compliance with the License.
 #
 """ Userbot module for getting the weather of a city. """
@@ -81,7 +81,7 @@ async def get_weather(weather):
     result = json.loads(request.text)
 
     if request.status_code != 200:
-        await weather.edit(f"`Invalid country.`")
+        await weather.edit("`Invalid country.`")
         return
 
     cityname = result['name']
@@ -136,6 +136,6 @@ async def get_weather(weather):
 
 CMD_HELP.update({
     "weather":
-    ".weather <city> or .weather <city>, <country name/code>\
+    "`.weather` <city> or `.weather` <city>, <country name/code>\
     \nUsage: Gets the weather of a city."
 })

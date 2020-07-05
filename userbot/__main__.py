@@ -1,6 +1,6 @@
 # Copyright (C) 2019 The Raphielscape Company LLC.
 #
-# Licensed under the Raphielscape Public License, Version 1.c (the "License");
+# Licensed under the Raphielscape Public License, Version 1.d (the "License");
 # you may not use this file except in compliance with the License.
 #
 """ Userbot start point """
@@ -9,7 +9,7 @@ from importlib import import_module
 from sys import argv
 
 from telethon.errors.rpcerrorlist import PhoneNumberInvalidError
-from userbot import LOGS, bot
+from userbot import LOGS, bot, BOT_VER
 from userbot.modules import ALL_MODULES
 
 
@@ -26,12 +26,13 @@ except PhoneNumberInvalidError:
 for module_name in ALL_MODULES:
     imported_module = import_module("userbot.modules." + module_name)
 
-LOGS.info("You are running OpenUserBot [v7.7.7]")
+LOGS.info(f"You are running oub-remix [{BOT_VER}]")
 
 LOGS.info(
-    "😘 Congratulations, your userbot is now running !! Test it by typing .ping in any chat 😘."
-    "Once died 😵, but now ON again 😉, A BIG thanks to https://github.com/Devp73 Dev Patel who have helped make this userbot ON AGAIN with his HUGE FIX!!"
-    "for command list type .help & If you need assistance, head to https://t.me/PPE_Support")
+    "Congratulations, your userbot is now running !! Test it by typing .start/.ping in any chat."
+    "\nIf you need assistance, head to https://t.me/PPE_Support")
+    
+    
 
 if len(argv) not in (1, 3, 4):
     bot.disconnect()

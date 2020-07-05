@@ -11,6 +11,7 @@ import urllib.request
 from os import remove
 from PIL import Image
 import random
+import asyncio
 from telethon.tl.types import DocumentAttributeFilename, MessageMediaPhoto
 from userbot import bot, CMD_HELP
 from userbot.events import register
@@ -29,6 +30,14 @@ KANGING_STR = [
     "Roses are red violets are blue, kanging this sticker so my pacc looks cool",
     "Imprisoning this sticker...",
     "Mr.Steal Your Sticker is stealing this sticker... ",
+    "Kanging your sticker..",
+    "Looks there's a girl...",
+    "Darling join my pack 😘",
+    "Hacker is hacking your pack....",
+    "I will kang now and you can't stop me",
+    "Pero kanger is back",
+    "Lets steal before owner sees it 😂",
+    "Hey can i kang? Hmm lets kang coz u can't stop me🤣",
 ]
 
 
@@ -80,7 +89,7 @@ async def kang(args):
     if photo:
         splat = args.text.split()
         if not emojibypass:
-            emoji = "🤔"
+            emoji = "😃"
         pack = 1
         if len(splat) == 3:
             pack = splat[2]  # User sent both
@@ -167,7 +176,7 @@ async def kang(args):
                         # Ensure user doesn't get spamming notifications
                         await bot.send_read_acknowledge(conv.chat_id)
                         await args.edit(f"`Sticker added in a Different Pack !\
-                            \nThis Pack is Newly created!\
+                            \nThis Pack is Newly Baked!\
                             \nYour pack can be found [here](t.me/addstickers/{packname})",
                                         parse_mode='md')
                         return
@@ -192,7 +201,7 @@ async def kang(args):
                 # Ensure user doesn't get spamming notifications
                 await bot.send_read_acknowledge(conv.chat_id)
         else:
-            await args.edit("`Brewing a new Pack...`")
+            await args.edit("`Baking a new Pack...`")
             async with bot.conversation('Stickers') as conv:
                 await conv.send_message(cmd)
                 await conv.get_response()
@@ -236,10 +245,11 @@ async def kang(args):
                 # Ensure user doesn't get spamming notifications
                 await bot.send_read_acknowledge(conv.chat_id)
 
-        await args.edit(f"`Sticker kanged successfully!`\
-            \nPack can be found [here](t.me/addstickers/{packname})",
+        await args.edit(f"`kanged successfully!`\
+                        \nClick [here](t.me/addstickers/{packname})",
                         parse_mode='md')
-
+        await asyncio.sleep(7.5)                
+        await args.delete()
 
 async def resize_photo(photo):
     """ Resize the given photo to 512x512 """
@@ -299,6 +309,7 @@ async def get_pack_info(event):
         if document_sticker.emoticon not in pack_emojis:
             pack_emojis.append(document_sticker.emoticon)
 
+
     OUTPUT = f"**Sticker Title:** `{get_stickerset.set.title}\n`" \
         f"**Sticker Short Name:** `{get_stickerset.set.short_name}`\n" \
         f"**Official:** `{get_stickerset.set.official}`\n" \
@@ -308,17 +319,49 @@ async def get_pack_info(event):
 
     await event.edit(OUTPUT)
 
+@register(outgoing=True, pattern="^.getsticker$")
+async def sticker_to_png(sticker):
+    if not sticker.is_reply:
+        await sticker.edit("`NULL information to fetch...`")
+        return False
+
+    img = await sticker.get_reply_message()
+    if not img.document:
+        await sticker.edit("`Reply to a sticker...`")
+        return False
+
+    try:
+        img.document.attributes[1]
+    except Exception:
+        await sticker.edit("`This is not a sticker...`")
+        return
+
+    with io.BytesIO() as image:
+        await sticker.client.download_media(img, image)
+        image.name = 'sticker.png'
+        image.seek(0)
+        try:
+            await img.reply(file=image, force_document=True)
+        except Exception:
+            await sticker.edit("`Error, can't send file...`")
+        else:
+            await sticker.delete()
+    return
 
 CMD_HELP.update({
     "stickers":
-    ".kang\
+    "`.kang`\
 \nUsage: Reply .kang to a sticker or an image to kang it to your userbot pack.\
-\n\n.kang [emoji('s)]\
+\n\n`.kang` [emoji('s)]\
 \nUsage: Works just like .kang but uses the emoji('s) you picked.\
-\n\n.kang [number]\
-\nUsage: Kang's the sticker/image to the specified pack but uses 🤔 as emoji.\
-\n\n.kang [emoji('s)] [number]\
+\n\n`.kang` [number]\
+\nUsage: Kang's the sticker/image to the specified pack but uses 😃 as emoji.\
+\n\n`.kang` [emoji('s)] [number]\
 \nUsage: Kang's the sticker/image to the specified pack and uses the emoji('s) you picked.\
-\n\n.stkrinfo\
-\nUsage: Gets info about the sticker pack."
+\n\n`.stkrinfo`\
+\nUsage: Gets info about the sticker pack.\
+\n\n`.getsticker`\
+\nUsage:reply to a sticker to get 'PNG' file of sticker.\
+\n\n`.cs <text>`\
+\nUsage: Type .cs text and generate rgb sticker."
 })

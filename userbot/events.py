@@ -1,6 +1,6 @@
 # Copyright (C) 2019 The Raphielscape Company LLC.
 #
-# Licensed under the Raphielscape Public License, Version 1.c (the "License");
+# Licensed under the Raphielscape Public License, Version 1.d (the "License");
 # you may not use this file except in compliance with the License.
 #
 """ Userbot module for managing events.
@@ -21,12 +21,13 @@ from userbot import bot, BOTLOG_CHATID, LOGSPAMMER
 def register(**args):
     """ Register a new event. """
     pattern = args.get('pattern', None)
-    disable_edited = args.get('disable_edited', False)
+    disable_edited = args.get('disable_edited', True)
     ignore_unsafe = args.get('ignore_unsafe', False)
     unsafe_pattern = r'^[^/!#@\$A-Za-z]'
     groups_only = args.get('groups_only', False)
     trigger_on_fwd = args.get('trigger_on_fwd', False)
     disable_errors = args.get('disable_errors', False)
+    insecure = args.get('insecure', False)
 
     if pattern is not None and not pattern.startswith('(?i)'):
         args['pattern'] = '(?i)' + pattern
@@ -46,12 +47,19 @@ def register(**args):
     if "trigger_on_fwd" in args:
         del args['trigger_on_fwd']
 
+    if "insecure" in args:
+        del args['insecure']
+
     if pattern:
         if not ignore_unsafe:
             args['pattern'] = pattern.replace('^.', unsafe_pattern, 1)
 
     def decorator(func):
         async def wrapper(check):
+            if check.edit_date and check.is_channel and not check.is_group:
+                # Messages sent in channels can be edited by other users.
+                # Ignore edits that take place in channels.
+                return
             if not LOGSPAMMER:
                 send_to = check.chat_id
             else:
@@ -62,6 +70,9 @@ def register(**args):
 
             if groups_only and not check.is_group:
                 await check.respond("`I don't think this is a group.`")
+                return
+
+            if check.via_bot_id and not insecure and check.out:
                 return
 
             try:
@@ -86,9 +97,9 @@ def register(**args):
                     date = strftime("%Y-%m-%d %H:%M:%S", gmtime())
 
                     text = "**USERBOT ERROR REPORT**\n"
-                    link = "[OUB Support Chat](https://t.me/PPE_Support)"
+                    link = "[OUB Support](https://t.me/PPE_Support)"
                     text += "If you want to, you can report it"
-                    text += f"- just forward this message to {link}.\n"
+                    text += f". Head and forward this message to {link}.\n"
                     text += "Nothing is logged except the fact of error and date\n"
 
                     ftext = "========== DISCLAIMER =========="

@@ -1,6 +1,6 @@
 # Copyright (C) 2019 The Raphielscape Company LLC.
 #
-# Licensed under the Raphielscape Public License, Version 1.c (the "License");
+# Licensed under the Raphielscape Public License, Version 1.d (the "License");
 # you may not use this file except in compliance with the License.
 """ Userbot module containing commands for keeping global notes. """
 
@@ -30,11 +30,12 @@ async def on_snip(event):
                                         msg_o.message,
                                         reply_to=message_id_to_reply,
                                         file=msg_o.media)
+        await event.delete()
     elif snip and snip.reply:
         await event.client.send_message(event.chat_id,
                                         snip.reply,
                                         reply_to=message_id_to_reply)
-
+        await event.delete()
 
 @register(outgoing=True, pattern="^.snip (\w*)")
 async def on_snip_save(event):
@@ -117,11 +118,11 @@ CMD_HELP.update({
     "\
 $<snip_name>\
 \nUsage: Gets the specified snip, anywhere.\
-\n\n.snip <name> <data> or reply to a message with .snip <name>\
+\n\n`.snip` <name> <data> or reply to a message with .snip <name>\
 \nUsage: Saves the message as a snip (global note) with the name. (Works with pics, docs, and stickers too!)\
-\n\n.snips\
+\n\n`.snips`\
 \nUsage: Gets all saved snips.\
-\n\n.remsnip <snip_name>\
+\n\n`.remsnip` <snip_name>\
 \nUsage: Deletes the specified snip.\
 "
 })
