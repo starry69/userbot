@@ -63,7 +63,6 @@ from telethon.tl.types import DocumentAttributeAudio
 from userbot.utils import progress, humanbytes, time_formatter, chrome, googleimagesdownload
 import subprocess
 from datetime import datetime
-import asyncurban
 
 
 CARBONLANG = "auto"
@@ -301,19 +300,27 @@ async def wiki(wiki_q):
 
 
 @register(outgoing=True, pattern="^.ud (.*)")
-async def _(event):
-    if event.fwd_from:
-        return
-    await event.edit("processing...")
-    word = event.pattern_match.group(1)
-    urban = asyncurban.UrbanDictionary()
+async def ud(event):
+    text = event.pattern_match.group(1)
+    session = aiohttp.ClientSession()
+    await event.edit("🔍 Searching...")
+
     try:
-        mean = await urban.get_word(word)
-        await event.edit("Text: **{}**\n\nMeaning: **{}**\n\nExample: __{}__".format(mean.word, mean.definition, mean.example))
-    except asyncurban.WordNotFoundError:
-        await event.edit("No result found for **" + word + "**")
-       
-               
+       res = await session.get(
+       f'http://api.urbandictionary.com/v0/define?term={text}')
+       res = await res.json()
+       reply = (f'Word: {text}\nDefinition: {res["list"][0]["definition"]}' \
+                f'\n\nExample: {res["list"][0]["example"]}')
+    except IndexError:
+        return await event.edit("Sorry! couldn't find any results.")
+    finally:
+       await session.close()
+
+    for x in '[]': # remove shitty sq brackets
+        reply = reply.replace(x, '')
+    if len(reply) >= 4096: reply = reply[:4096]
+    await event.edit(reply)
+
 
 @register(outgoing=True, pattern=r"^.tts(?: |$)([\s\S]*)")
 async def text_to_speech(query):
